@@ -1,12 +1,12 @@
-<?
+<?php
 namespace Truecast;
 
 /**
  * This is a global configuration storage class so you can easily access configuration strings
  *
- * @package TrueAdmin 5
+ * @package TrueAdmin 6
  * @author Daniel Baldwin
- * @version 1.1.0
+ * @version 1.1.2
  */
 
 class Config
@@ -21,33 +21,42 @@ class Config
 	
 	protected $delim = '"'; # string delimiter
 	
+	public function __construct($files = null)
+	{
+		$this->load($files);
+	}
+
 	/**
 	 * Use this method to load into memory the config settings
 	 *
-	 * @param string $file - use the config path starting from web root with no starting slash
+	 * @param string $files - use the config path starting from web root with no starting slash
 	 * example: system/config/site.ini
 	 * @return void
 	 * @author Daniel Baldwin - danielbaldwin@gmail.com
 	 **/
-	public function load($file)
+	public function load($files)
 	{
 		# multiple files
-		if(strpos($file, ','))
-			$files = explode(',', $file);
+		if(strpos($files, ','))
+			$filesList = explode(',', $files);
 		else # single file
-			$files[] = $file;
+			$filesList[] = $files;
 			
-		foreach($files as $file)
+		foreach($filesList as $file)
 		{
 			$file = trim($file);
 			
 			# convert file into array
 			if(file_exists($file))
-				$config = parse_ini_file($file, true); 
+				$config = parse_ini_file($file, true);
+
+			# if it has sections, remove the config_title array that gets created
+			$configTitle = $config['config_title'];
+			unset($config['config_title']);
 			
 			# add the array using the config title as a key to the items array
 			if(is_array($config))
-				$this->items[$config['config_title']] = (object) $config;
+				$this->items[$configTitle] = (object) $config;
 		}
 	}
 
@@ -183,4 +192,3 @@ class Config
 		return 'no';
 	}
 }
-?>

@@ -45,8 +45,8 @@ buffer = true
 require '/path/to/vendor/autoload.php';
 
 # load in needed config files into Config object
-$TAConfig = new \Truecast\Config();
-$TAConfig->load('/path/to/config/mysql.ini'); 
+$TAConfig = new \Truecast\Config('/path/to/config/mysql.ini'); # standard path: __DIR__.'/../app/config/mysql.ini'
+
 # can load multiple config files at once with a comma between. Example: '/path/to/config/mysql.ini, /path/to/config/site.ini'
 ```
 
