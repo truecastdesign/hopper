@@ -1,18 +1,10 @@
 {
   "name": "truecastdesign/config",
   "type" : "library",
-  "version": "1.1.0",
-  "version_normalized": "1.1.0.0",
   "description": "An ini config loader class for easy configuration loading and access.",
   "keywords": ["slim","framework","php","config","loader"],
   "license": "MIT",
-  "source": {
-    "type": "git",
-    "url": "https://github.com/baldwind/truecast-config.git",
-    "reference": "575a8b53a0a489447915029c69680156cd355304"
-  },
 
-  
   "authors": [
   {
     "name": "Daniel Baldwin",
