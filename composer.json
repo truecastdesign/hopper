@@ -1,8 +1,8 @@
 {
-  "name": "truecast/config",
+  "name": "truecastdesign/config",
   "type" : "library",
-  "version": "1.0.2",
-  "version_normalized": "1.0.2.0",
+  "version": "1.1.0",
+  "version_normalized": "1.1.0.0",
   "description": "An ini config loader class for easy configuration loading and access.",
   "keywords": ["slim","framework","php","config","loader"],
   "license": "MIT",
