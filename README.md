@@ -21,6 +21,7 @@ Here's a basic usage example:
 
 Create config file in the format:
 
+```sh
 ; MySQL database config
 
 config_title = 'mysql'
@@ -35,6 +36,7 @@ emulate_prepares = false
 compress = true
 charset = 'utf8'
 buffer = true
+```
 
 ```php
 <?
