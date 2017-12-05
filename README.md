@@ -9,7 +9,7 @@ Install
 To install with composer:
 
 ```sh
-composer require truecast/config
+composer require truecastdesign/config
 ```
 
 Requires PHP 5.5 or newer.
