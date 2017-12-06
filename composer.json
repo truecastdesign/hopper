@@ -1,8 +1,8 @@
 {
-  "name": "truecastdesign/config",
+  "name": "truecastdesign/hopper",
   "type" : "library",
-  "description": "An ini config loader class for easy configuration loading and access.",
-  "keywords": ["slim","framework","php","config","loader"],
+  "description": "This library provides a simple and powerful way to SET and GET records from a PDO database.",
+  "keywords": ["slim","framework","php","dbpdo","layer","database","db","abstraction","layer","dbal"],
   "license": "MIT",
 
   "authors": [
@@ -18,8 +18,5 @@
     "psr-4": {
       "Truecast\\": "src"
     }
-  },
-  "require-dev": {
-  "slim/slim" : "^3.0"
   }
 }
