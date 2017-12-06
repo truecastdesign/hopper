@@ -1,5 +1,5 @@
 <?
-namespace Truecast\Hopper;
+namespace Truecast;
 /**
  * Database layer script for fast database interactions
  *
