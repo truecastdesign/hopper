@@ -8,7 +8,7 @@ use PDO;
  *
  * @package TrueAdmin 6
  * @author Daniel Baldwin
- * @version 1.1.1
+ * @version 1.1.2
  * @copyright 2017 Truecast Design Studio
  */
 class Hopper
