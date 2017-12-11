@@ -1,5 +1,8 @@
 <?
 namespace Truecast;
+
+use PDO;
+
 /**
  * Database layer script for fast database interactions
  *
@@ -25,21 +28,24 @@ class Hopper
 	/**
 	 * construct
 	 *
-	 * @param array|object $config  array( 'type' => 'mysql', 'hostname' => 'localhost', 'username' => '', 'password' => '', 'database' => '', 'emulate_prepares'=>false, 'error_mode'=>PDO::ERRMODE_EXCEPTION, 'persistent'=> false, 'compress'=> false, 'charset' => 'utf8', 'port'=>3306, 'buffer'=>true );
+	 * @param array|object $config  array( 'driver' => 'mysql', 'host' => 'localhost', 'username' => '', 'password' => '', 'database' => '', 'emulate_prepares'=>false, 'error_mode'=>PDO::ERRMODE_EXCEPTION, 'persistent'=> false, 'compress'=> false, 'charset' => 'utf8', 'port'=>3306, 'buffer'=>true );
 	 * @author Daniel Baldwin
 	 */
 	public function __construct($config)
 	{		
+		$options = [];
+
 		if(is_array($config))
 			$config = (object) $config;
 
-		switch($config->type)
+		switch($config->driver)
 		{
 			case 'mysql':
-				if(isset($config->hostname)) $dsn = 'mysql:host='.$config->hostname;
+				if(isset($config->host)) $dsn = 'mysql:host='.$config->host;
 				else $dsn = 'mysql:host=localhost';
 				if(isset($config->database)) $dsn .= ';dbname='.$config->database;
 				if(isset($config->charset)) $dsn .= ';charset='.$config->charset;
+				if(isset($config->port)) $dsn .= ';port='.$config->port;
 				
 				if(isset($config->emulate_prepares)) $options [PDO::ATTR_EMULATE_PREPARES] = $config->emulate_prepares;
 				if(isset($config->error_mode)) $options [PDO::ATTR_ERRMODE] = $config->error_mode;
@@ -216,7 +222,7 @@ class Hopper
 	 * @param string $type - return an array | 2dim | object | class | bound | number | value. 2dim will always return a two-dimensional array
 	 * @param string $arrayIndex - alternate field should be the array index for multidimensional arrays 
 	 * @param string $errorMsg - custom error message
-	 * @return array
+	 * @return array | object; default is an object
 	 * @author Daniel Baldwin
 	 *
 	 * @example get('select * from table where id IN(?,?)', array(1,3))
@@ -229,14 +235,14 @@ class Hopper
 		
 		switch($type)
 		{
-			case 'array': $pdoType = PDO::FETCH_ASSOC; break;
-			case '2dim': $pdoType = PDO::FETCH_ASSOC; break;
-			case 'object': $pdoType = PDO::FETCH_OBJ; break;
-			case 'class': $pdoType = PDO::FETCH_CLASS; break;
-			case 'bound': $pdoType = PDO::FETCH_BOUND; break;
-			case 'number': $pdoType = PDO::FETCH_NUM; break;
-			case 'value': $pdoType = PDO::FETCH_ASSOC; break;
-			default: $pdoType = PDO::FETCH_ASSOC; break;
+			case 'array': $pdoType = 2; break;
+			case '2dim': $pdoType = 2; break;
+			case 'object': $pdoType = 5; break;
+			case 'class': $pdoType = 8; break;
+			case 'bound': $pdoType = 6; break;
+			case 'number': $pdoType = 3; break;
+			case 'value': $pdoType = 2; break;
+			default: $pdoType = 5; break;
 		}
 		
 		try {
@@ -261,7 +267,7 @@ class Hopper
 					elseif($type=='array')
 					{
 						# if it is a multi-dim array make it 1 dim
-						if(is_array($result[0]))
+						if(@is_array($result[0]))
 						{
 							foreach($result as $values)
 							{
