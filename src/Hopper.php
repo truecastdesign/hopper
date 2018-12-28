@@ -8,7 +8,7 @@ use PDO;
  *
  * @package TrueAdmin 6
  * @author Daniel Baldwin
- * @version 1.2.0
+ * @version 1.2.1
  * @copyright 2018 Truecast Design Studio
  */
 class Hopper
@@ -545,7 +545,7 @@ class Hopper
 		if(!empty($errorMsg))
 			$errorMsg = $errorMsg.' : ';
 		
-		$this->errorMsg .= $errorMsg.'Query '.htmlspecialchars((is_array($query)? implode(",", $query):$query)).' in '.$trace[2]['class'].'::'.$trace[2]['function'].' on line '.$trace[1]['line'].' in the file '.$trace[1]['file']."<br>";
+		$this->errorMsg .= $errorMsg.'Query '.htmlspecialchars((is_array($this->query)? implode(",", $this->query):$this->query)).' in '.$trace[2]['class'].'::'.$trace[2]['function'].' on line '.$trace[1]['line'].' in the file '.$trace[1]['file']."<br>";
 	}
 
 	/**
