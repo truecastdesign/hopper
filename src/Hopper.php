@@ -8,8 +8,8 @@ use PDO;
  *
  * @package TrueAdmin 6
  * @author Daniel Baldwin
- * @version 1.1.2
- * @copyright 2017 Truecast Design Studio
+ * @version 1.2.0
+ * @copyright 2018 Truecast Design Studio
  */
 class Hopper
 {
@@ -29,7 +29,7 @@ class Hopper
 	 * construct
 	 *
 	 * @param array|object $config  array( 'driver' => 'mysql', 'host' => 'localhost', 'username' => '', 'password' => '', 'database' => '', 'emulate_prepares'=>false, 'error_mode'=>PDO::ERRMODE_EXCEPTION, 'persistent'=> false, 'compress'=> false, 'charset' => 'utf8', 'port'=>3306, 'buffer'=>true );
-	 For SQLITE: use a config like ['driver'=>'sqlite', 'database'=>'data/main.db']
+	 * For SQLITE: use a config like ['driver'=>'sqlite', 'database'=>'data/main.db']
 	 * @author Daniel Baldwin
 	 */
 	public function __construct($config)
@@ -58,7 +58,8 @@ class Hopper
 					$this->obj = new PDO($dsn, $config->username, $config->password, $options);
 				}
 				catch(PDOException $ex) { 
-					$this->errorMsg .= $ex->getMessage(); $this->display_error();
+					$this->setError($ex->getMessage()." ".$errorMsg);
+					return false;
 				}
 			break;
 			
@@ -69,50 +70,68 @@ class Hopper
 					$this->obj = new PDO($dsn);
 				}
 				catch(PDOException $ex) { 
-					$this->errorMsg .= $ex->getMessage(); $this->display_error();
+					$this->setError($ex->getMessage()." ".$errorMsg);
+					return false;
 				}
 			break;
 		}
 	}
 		
-	public function display_error($query=null)
-	{
-		$trace=debug_backtrace();
-		$errorMsg = 'Query '.$this->errorMsg.' in '.$trace[2]['class'].'::'.$trace[2]['function'].' on line '.$trace[1]['line'].' in the file '.$trace[1]['file'];
-		
-		if(DEBUG==true) trigger_error('Database Error: '.$errorMsg.'<br/>Debug Error: '.htmlspecialchars((is_array($query)? implode(",", $query):$query)).'<br/>',512);	
-	}
-
-	/**
-	 * returns an debug error string
-	 *
-	 * @return string with errors
-	 * @author Daniel Baldwin - danb@truecastdesign.com
-	 **/
-	public function return_error()
-	{
-		$trace = debug_backtrace();
-		if(!empty($this->errorMsg))
-			return 'Database Error: Query '.$this->errorMsg.' in '.$trace[2]['class'].'::'.$trace[2]['function'].' on line '.$trace[1]['line'].' in the file '.$trace[1]['file'];
-	}
+	
 
 	public function query($query, $errorMsg='')
 	{ 
-		$this->errorMsg = $errorMsg;
-		
-		if(!is_object($this->obj)) $this->display_error("Database object not created. ".$query);
-		else
+		if(!is_object($this->obj)) 
 		{
-			try { $this->result = $this->obj->query($query); return true;}
-			catch(PDOException $ex) { $this->errorMsg .= $ex->getMessage(); $this->display_error($query); echo $ex->getMessage(); return false;}
+			$this->setError("Database object not created. ".$query.'; '.$errorMsg);
+			return false;
+		}
+
+		try { 
+			$this->result = $this->obj->query($query); 
+			return true;
+		}
+		catch(PDOException $ex) { 
+			$this->setError($ex->getMessage().' '.$errorMsg); 
+			return false;
 		}
 	}
 	
 	public function execute($query, $values, $errorMsg='')
 	{
-		$this->errorMsg = $errorMsg;
-		try { $dbRes = $this->obj->prepare($query); $dbRes->execute($values); return true;}
-		catch(PDOException $ex) { $this->errorMsg .= $ex->getMessage(); $this->display_error($query); return false;}
+		if(!is_object($this->obj)) 
+		{
+			$this->setError("Database object not created. ".$query.'; '.$errorMsg);
+			return false;
+		}
+
+		if(!is_string($query))
+		{
+			$this->setError("Query was not provided. ".$errorMsg.' | Query: '.$query);
+			return false;
+		}
+
+		try { 
+			$dbRes = $this->obj->prepare($query); 
+
+			var_dump($dbRes);
+
+			if(is_object($dbRes))
+			{
+				$dbRes->execute($values);
+			}	
+			else
+			{
+				$this->setError("Table not created. ".$errorMsg.' | Query: '.$query);
+				return false;
+			}
+
+			return true;
+		}
+		catch(PDOException $ex) { 
+			$this->setError($ex->getMessage()." ".$errorMsg.' | Query: '.$query);
+			return false;
+		}
 	}
 	
 	/**
@@ -127,12 +146,13 @@ class Hopper
 	 */
 	public function delete($table, $id, $field='id', $errorMsg='')
 	{
-		$this->errorMsg = $errorMsg;
 		if(is_array($id) AND is_array($field))
 		{
 			$query = "DELETE FROM ".$table." WHERE";
+			
 			foreach($field as $key)
 				$query .= ' '.$key.'=?';
+			
 			$values = $id;
 		}
 		elseif(is_array($id))
@@ -146,9 +166,25 @@ class Hopper
 			$values[] = $id;
 		}
 		
-		try {	$dbRes = $this->obj->prepare($query); $dbRes->execute($values); }
-		catch(PDOException $ex) { $this->errorMsg .= $ex->getMessage(); $this->display_error($query);}
-		return $dbRes->rowCount();
+		try {
+			$dbRes = $this->obj->prepare($query);
+
+			if(is_object($dbRes))
+			{
+				$dbRes->execute($values);
+				return $dbRes->rowCount();
+			} 
+			else
+			{
+				$this->setError("Table not created. ".$errorMsg);
+				return false;
+			}
+		}
+		catch(PDOException $ex) {
+			$this->setError($ex->getMessage()." ".$errorMsg);
+			return false;
+		}
+		
 	}
 	
 	/**
@@ -170,7 +206,7 @@ class Hopper
 		$fieldCount = count($set);
 		if($fieldCount < 1)
 		{
-			$this->errorMsg = 'Key/Value array empty!';
+			$this->setError('Key/Value array empty! '.$errorMsg);
 			return false;
 		}
 		
@@ -192,7 +228,7 @@ class Hopper
 		} 
 		else 
 		{
-			$query = "INSERT INTO ".$table.'('.implode(',',$fields).') VALUES(?';
+			$query = "INSERT INTO ".$table.' ('.implode(',',$fields).') VALUES(?';
 			for ($i=1; $i < $fieldCount; $i++)
 			{ 
 				$query .= ',?';
@@ -201,17 +237,31 @@ class Hopper
 		}
 		
 		try {
-			if(!is_object($this->obj)) $this->display_error("Database object not created. ".$query);
-			else $this->obj->prepare($query)->execute($values);
+			if(!is_object($this->obj))
+			{
+				$this->setError("Database object not created.".' | Query: '.$query);
+				return false;
+			}
+			else
+			{
+				$dbRes = $this->obj->prepare($query);
+
+				if(is_object($dbRes))
+				{
+					$dbRes->execute($values);
+
+					if(isset($set[$idfield])) 
+						return $set[$idfield]; # update
+					else
+						return $this->obj->lastInsertId(); # insert
+				}
+				else
+					$this->setError("Database prepare statement didn't return an object.".' | Query: '.$query);
+			}
 		}
-		catch(PDOException $ex) { $this->errorMsg .= $ex->getMessage(); $this->display_error($query.' '.implode(', ',$set));}
-		
-		# return the ID#, whether new insert id, or echoing back the update id
-		if(isset($set[$idfield])) return $set[$idfield]; # update
-		else
-		{
-			if(!is_object($this->obj)) $this->display_error("Database object not created. ".$query);
-			else return $this->obj->lastInsertId(); # insert
+		catch(PDOException $ex) {
+			$this->setError($ex->getMessage().' | Query: '.$query);
+			return false;
 		}
 	}
 	
@@ -220,7 +270,7 @@ class Hopper
 	 *
 	 * @param string $query - mysql query
 	 * @param array $get - array of fields and values
-	 * @param string $type - return an array | 2dim | object | class | bound | number | value. 2dim will always return a two-dimensional array
+	 * @param string $type - return an array | arrays | 2dim (deprecated: use arrays instead) | object | class | bound | number | value. 2dim will always return a two-dimensional array
 	 * @param string $arrayIndex - alternate field should be the array index for multidimensional arrays 
 	 * @param string $errorMsg - custom error message
 	 * @return array | object; default is an object
@@ -231,33 +281,49 @@ class Hopper
 	 */
 	public function get($query, $get=null, $type='array', $arrayIndex=null, $errorMsg='')
 	{
-		$this->errorMsg = $errorMsg;
-		if(!is_object($this->obj)) echo "Database object in DBPDO not available";
+		if(!is_object($this->obj)) 
+		{
+			$this->setError("Database object in DBPDO not available");
+			return false;
+		}	
 		
 		switch($type)
 		{
 			case 'array': $pdoType = 2; break;
+			case 'arrays': $pdoType = 2; break;
 			case '2dim': $pdoType = 2; break;
-			case 'object': $pdoType = 5; break;
+			case 'object': $pdoType = 8; break;
+			case 'objects': $pdoType = 8; break;
 			case 'class': $pdoType = 8; break;
 			case 'bound': $pdoType = 6; break;
 			case 'number': $pdoType = 3; break;
 			case 'value': $pdoType = 2; break;
+			case 'keypair': $pdoType = PDO::FETCH_KEY_PAIR; break;
 			default: $pdoType = 5; break;
 		}
 		
 		try {
 			if(is_array($get))
 			{
-				$dbres = $this->obj->prepare($query);
-				$dbres->execute($get);
+				$dbRes = $this->obj->prepare($query);
 			}	
-			else $dbres = $this->obj->query($query);
-			
-			if($dbres->rowCount() > 1 OR $type=='2dim')
-				$result = $dbres->fetchAll($pdoType);
 			else
-				$result = $dbres->fetch($pdoType);
+			{
+				$dbRes = $this->obj->query($query);
+			}
+
+			if(is_object($dbRes))
+				$dbRes->execute($get);
+			else
+			{
+				$this->setError("Table not created.");
+				return false;
+			}
+			
+			if($dbRes->rowCount() > 1 OR $type == '2dim' OR $type == 'arrays' OR $type == 'objects')
+				$result = $dbRes->fetchAll($pdoType);
+			else
+				$result = $dbRes->fetch($pdoType);
 			
 			if(is_array($result))
 			{
@@ -284,7 +350,10 @@ class Hopper
 						
 					}
 					else
+					{
 						return $result;
+					}
+						
 				}	
 				else
 				{
@@ -300,7 +369,10 @@ class Hopper
 				return $result;
 			}
 		}
-		catch(PDOException $ex) { $this->errorMsg .= $ex->getMessage(); $this->display_error($query);}
+		catch(PDOException $ex) {
+			$this->setError($ex->getMessage());
+			return false;
+		}
 	}
 	
 	/**
@@ -343,8 +415,12 @@ class Hopper
 		$deleteValues[] = $settings['record_id'];
 			
 		
-		try { $this->obj->prepare($deleteQuery)->execute($deleteValues); }
-		catch(PDOException $ex) { $this->errorMsg .= $ex->getMessage(); $this->display_error($deleteQuery.' '.implode(', ',$deleteValues));}
+		try { 
+			$this->obj->prepare($deleteQuery)->execute($deleteValues); 
+		}
+		catch(PDOException $ex) {
+			$this->setError($ex->getMessage());
+		}
 		
 		/*INSERT INTO table (artist, album, track, length) 
 		VALUES 
@@ -382,7 +458,7 @@ class Hopper
 		$insertQuery .= $valuesStr;
 				
 		try { $this->obj->prepare($insertQuery)->execute($allValues); }
-		catch(PDOException $ex) { $this->errorMsg .= $ex->getMessage(); $this->display_error($insertQuery.' '.implode(', ',$allValues));}
+		catch(PDOException $ex) { $this->errorMsg .= $ex->getMessage(); $this->setError();}
 		
 	}
 	
@@ -434,7 +510,7 @@ class Hopper
 	 * get row count for query
 	 *
 	 * @param string $query 
-	 * @param string $get 
+	 * @param array $get 
 	 * @param string $errorMsg 
 	 * @return void
 	 * @author Daniel Baldwin
@@ -442,13 +518,36 @@ class Hopper
 	public function rowCount($query, $get=null, $errorMsg='')
 	{
 		try {
-			$dbres = $this->obj->prepare($query);
-			$dbres->execute($get);
-			return $dbres->rowCount();
+			$dbRes = $this->obj->prepare($query);
+			if(is_object($dbRes))
+			{
+				$dbRes->execute($get);
+				return $dbRes->rowCount();
+			}	
+			else
+				$this->setError('Table not created!');
 		}
-		catch(PDOException $ex) { $this->errorMsg .= $ex->getMessage(); $this->display_error($query);}
+		catch(PDOException $ex) {
+			$this->setError($ex->getMessage());
+		}
 	}
 	
+	/**
+	 * Generate an error message and save it
+	 *
+	 * @return void
+	 * @author Daniel Baldwin - danb@truecastdesign.com
+	 **/
+	public function setError($errorMsg = null)
+	{
+		$trace = debug_backtrace();
+
+		if(!empty($errorMsg))
+			$errorMsg = $errorMsg.' : ';
+		
+		$this->errorMsg .= $errorMsg.'Query '.htmlspecialchars((is_array($query)? implode(",", $query):$query)).' in '.$trace[2]['class'].'::'.$trace[2]['function'].' on line '.$trace[1]['line'].' in the file '.$trace[1]['file']."<br>";
+	}
+
 	/**
 	 * get any errors that were generated
 	 *
@@ -588,7 +687,7 @@ class Hopper
 	 * @return array multidimensional
 	 * @author Daniel Baldwin
 	 */
-	function tree($arg)
+	public function tree($arg)
 	{
 		$where = (empty($arg['where'])? '':'WHERE '.$arg['where']);
 		
@@ -618,6 +717,17 @@ class Hopper
 			return $menuData;
 		}
 		catch(PDOException $ex) { $this->errorMsg .= $ex->getMessage(); $this->display_error($query);}
+	}
+
+	/**
+	 * Truncate table
+	 * 
+	 * @param  string $table table name
+	 * @return null
+	 */
+	public function empty(string $table)
+	{
+		$this->execute("TRUNCATE TABLE `$table`");
 	}
 	
 }
