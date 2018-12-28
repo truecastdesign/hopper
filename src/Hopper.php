@@ -8,7 +8,7 @@ use PDO;
  *
  * @package TrueAdmin 6
  * @author Daniel Baldwin
- * @version 1.2.1
+ * @version 1.2.2
  * @copyright 2018 Truecast Design Studio
  */
 class Hopper
@@ -23,6 +23,7 @@ class Hopper
 	private $query = '';
 	private $userErrorReporter = false;
 	private $queryList = array();
+	private $driver = '';
 	
 	
 	/**
@@ -38,6 +39,8 @@ class Hopper
 
 		if(is_array($config))
 			$config = (object) $config;
+
+		$this->driver = $config->driver;
 
 		switch($config->driver)
 		{
@@ -113,8 +116,6 @@ class Hopper
 
 		try { 
 			$dbRes = $this->obj->prepare($query); 
-
-			var_dump($dbRes);
 
 			if(is_object($dbRes))
 			{
@@ -727,7 +728,13 @@ class Hopper
 	 */
 	public function empty(string $table)
 	{
-		$this->execute("TRUNCATE TABLE `$table`");
+		if($this->driver == 'mysql')
+			$this->execute("TRUNCATE TABLE `".$table."`", []);
+		elseif($this->driver == 'sqlite')
+		{
+			$this->execute("DELETE FROM `".$table."`", []);
+			$this->execute("VACUUM", []);
+		}	
 	}
 	
 }
