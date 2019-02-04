@@ -6,10 +6,10 @@ use PDO;
 /**
  * Database layer script for fast database interactions
  *
- * @package TrueAdmin 6
+ * @package True Framework 6
  * @author Daniel Baldwin
- * @version 1.2.2
- * @copyright 2018 Truecast Design Studio
+ * @version 1.2.3
+ * @copyright 2019 Truecast Design Studio
  */
 class Hopper
 {
@@ -360,7 +360,14 @@ class Hopper
 				{
 					foreach($result as $item)
 					{
-						$output[$item[$arrayIndex]] = $item;
+						if(is_array($item))
+						{
+							$output[$item[$arrayIndex]] = $item;
+						}
+						elseif(is_object($item))
+						{
+							$output[$item->{$arrayIndex}] = $item;
+						}
 					}
 					return $output;
 				}
