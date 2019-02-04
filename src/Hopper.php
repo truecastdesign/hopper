@@ -8,7 +8,7 @@ use PDO;
  *
  * @package True Framework 6
  * @author Daniel Baldwin
- * @version 1.2.3
+ * @version 1.2.4
  * @copyright 2019 Truecast Design Studio
  */
 class Hopper
@@ -335,7 +335,7 @@ class Hopper
 					elseif($type=='array')
 					{
 						# if it is a multi-dim array make it 1 dim
-						if(@is_array($result[0]))
+						if(isset($result[0]) and @is_array($result[0]))
 						{
 							foreach($result as $values)
 							{
