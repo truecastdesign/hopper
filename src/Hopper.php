@@ -8,7 +8,7 @@ use PDO;
  *
  * @package True Framework 6
  * @author Daniel Baldwin
- * @version 1.2.4
+ * @version 1.2.5
  * @copyright 2019 Truecast Design Studio
  */
 class Hopper
@@ -293,7 +293,7 @@ class Hopper
 			case 'array': $pdoType = 2; break;
 			case 'arrays': $pdoType = 2; break;
 			case '2dim': $pdoType = 2; break;
-			case 'object': $pdoType = 8; break;
+			case 'object': $pdoType = PDO::FETCH_OBJ; break;
 			case 'objects': $pdoType = 8; break;
 			case 'class': $pdoType = 8; break;
 			case 'bound': $pdoType = 6; break;
@@ -314,7 +314,16 @@ class Hopper
 			}
 
 			if(is_object($dbRes))
-				$dbRes->execute($get);
+			{
+				if(is_array($get)) 
+				{
+					$dbRes->execute($get);
+				}
+				else
+				{
+					$dbRes->execute();
+				}
+			}	
 			else
 			{
 				$this->setError("Table not created.");
@@ -322,10 +331,13 @@ class Hopper
 			}
 			
 			if($dbRes->rowCount() > 1 OR $type == '2dim' OR $type == 'arrays' OR $type == 'objects')
+			{
 				$result = $dbRes->fetchAll($pdoType);
+			}
 			else
+			{
 				$result = $dbRes->fetch($pdoType);
-			
+			}
 			if(is_array($result))
 			{
 				if($arrayIndex == null)
@@ -374,6 +386,7 @@ class Hopper
 			}
 			elseif(is_object($result))
 			{
+
 				return $result;
 			}
 		}
