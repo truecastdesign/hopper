@@ -1,4 +1,4 @@
-<?
+<?php
 namespace Truecast;
 
 use PDO;
@@ -8,7 +8,7 @@ use PDO;
  *
  * @package True Framework 6
  * @author Daniel Baldwin
- * @version 1.2.5
+ * @version 1.2.6
  * @copyright 2019 Truecast Design Studio
  */
 class Hopper
@@ -552,6 +552,15 @@ class Hopper
 			$this->setError($ex->getMessage());
 		}
 	}
+
+	/**
+	 * Get the last inserted id
+	 * @return int the id
+	 */
+	public function lastInsertId()
+	{
+		return (int) $this->obj->lastInsertId();
+	}
 	
 	/**
 	 * Generate an error message and save it
@@ -639,64 +648,6 @@ class Hopper
 		catch(PDOException $ex) { $this->errorMsg .= $ex->getMessage(); $this->display_error($query);}
 	}
 	
-	function prev_id($id, $field='id')
-	{
-		for($i=0; $r = mysql_fetch_array($this->result); $i++)
-		{
-			if($r[$field]==$id) break;
-		}
-		if(!$i) $prevId = $this->last_id($field='id');
-		else
-		{
-			@mysql_data_seek($this->result, $i-1);
-			$r = mysql_fetch_array($this->result);
-			$prevId = $r[$field];
-		}
-		return $prevId;
-	}
-	
-	function next_prev_ids($id, $field='id')
-	{
-		$lastId = $this->last_id();
-		@mysql_data_seek($this->result, 0);
-		for($i=0; $r = mysql_fetch_array($this->result); $i++)
-		{
-			if($r[$field]==$id) break;
-		}
-		@mysql_data_seek($this->result, 0);
-		if(!$i) $prevId = $lastId;
-		else
-		{
-			mysql_data_seek($this->result, $i-1);
-			$r = mysql_fetch_array($this->result);
-			$prevId = $r[$field];
-		}
-
-		if($i==$this->num_rows()-1)
-			$nextId = $this->first_id();
-		else
-		{
-			mysql_data_seek($this->result, $i+1);
-			$r = mysql_fetch_array($this->result);
-			$nextId = $r[$field];
-		}
-		return array('prev'=>$prevId, 'next'=>$nextId);
-	}
-	
-	function first_id($field='id')
-	{
-		@mysql_data_seek($this->result, 0);
-		$r = mysql_fetch_array($this->result);
-		return $r[$field];
-	}
-	
-	function last_id($field='id')
-	{
-		$total = mysql_num_rows($this->result);
-		@mysql_data_seek($this->result, $total-1);
-		$r = mysql_fetch_array($this->result);
-		return $r[$field];
-	}
 
 	 
 	/**
