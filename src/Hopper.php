@@ -8,7 +8,7 @@ use PDO;
  *
  * @package True Framework 6
  * @author Daniel Baldwin
- * @version 1.2.6
+ * @version 1.3.0
  * @copyright 2019 Truecast Design Studio
  */
 class Hopper
@@ -282,6 +282,8 @@ class Hopper
 	 */
 	public function get($query, $get=null, $type='array', $arrayIndex=null, $errorMsg='')
 	{
+		$this->query = $query;
+		
 		if(!is_object($this->obj)) 
 		{
 			$this->setError("Database object in DBPDO not available");
@@ -587,6 +589,17 @@ class Hopper
 	public function getErrors()
 	{
 		return $this->errorMsg;
+	}
+
+	/**
+	 * Return last query run
+	 * 
+	 * @return string - query string
+	 * @author Daniel Baldwin <danielbaldwin@gmail.com>
+	 */
+	public function getLastQuery()
+	{
+		return $this->query;
 	}
 	
 	/**
