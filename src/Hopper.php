@@ -8,7 +8,7 @@ use PDO;
  *
  * @package True Framework 6
  * @author Daniel Baldwin
- * @version 1.3.0
+ * @version 1.4.0
  * @copyright 2019 Truecast Design Studio
  */
 class Hopper
@@ -24,6 +24,7 @@ class Hopper
 	private $userErrorReporter = false;
 	private $queryList = array();
 	private $driver = '';
+	private $extraQuery = '';
 	
 	
 	/**
@@ -308,11 +309,11 @@ class Hopper
 		try {
 			if(is_array($get))
 			{
-				$dbRes = $this->obj->prepare($query);
+				$dbRes = $this->obj->prepare($query.$this->extraQuery);
 			}	
 			else
 			{
-				$dbRes = $this->obj->query($query);
+				$dbRes = $this->obj->query($query.$this->extraQuery);
 			}
 
 			if(is_object($dbRes))
@@ -396,6 +397,21 @@ class Hopper
 			$this->setError($ex->getMessage());
 			return false;
 		}
+	}
+
+	/**
+	 * Chainable method for adding order by field to query. Used by get method.
+	 * $DB->sort($sort)->get('select * from table', null, 'arrays'); where $sort = 'field_name'. If sort field is empty than no order by will be added.
+	 *
+	 * @param string $sort 'field_name'
+	 * @return self
+	 */
+	public function sort($sort = null)
+	{
+		if (!empty($sort)) {
+			$this->extraQuery .= ' order by '.$sort;
+		}
+		return $this;
 	}
 	
 	/**
