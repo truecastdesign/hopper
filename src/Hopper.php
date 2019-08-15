@@ -8,7 +8,7 @@ use PDO;
  *
  * @package True Framework 6
  * @author Daniel Baldwin
- * @version 1.4.0
+ * @version 1.4.1
  * @copyright 2019 Truecast Design Studio
  */
 class Hopper
@@ -85,6 +85,8 @@ class Hopper
 
 	public function query($query, $errorMsg='')
 	{ 
+		$this->query = $query;
+		
 		if(!is_object($this->obj)) 
 		{
 			$this->setError("Database object not created. ".$query.'; '.$errorMsg);
@@ -103,6 +105,8 @@ class Hopper
 	
 	public function execute($query, $values, $errorMsg='')
 	{
+		$this->query = $query;
+
 		if(!is_object($this->obj)) 
 		{
 			$this->setError("Database object not created. ".$query.'; '.$errorMsg);
@@ -150,26 +154,26 @@ class Hopper
 	{
 		if(is_array($id) AND is_array($field))
 		{
-			$query = "DELETE FROM ".$table." WHERE";
+			$this->query = "DELETE FROM ".$table." WHERE";
 			
 			foreach($field as $key)
-				$query .= ' '.$key.'=?';
+				$this->query .= ' '.$key.'=?';
 			
 			$values = $id;
 		}
 		elseif(is_array($id))
 		{
-			$query = "DELETE FROM ".$table." WHERE ".$field." IN(".implode(',',$id).")";
+			$this->query = "DELETE FROM ".$table." WHERE ".$field." IN(".implode(',',$id).")";
 			$values = $id;
 		}
 		else
 		{
-			$query = "DELETE FROM ".$table." WHERE ".$field."=?";
+			$this->query = "DELETE FROM ".$table." WHERE ".$field."=?";
 			$values[] = $id;
 		}
 		
 		try {
-			$dbRes = $this->obj->prepare($query);
+			$dbRes = $this->obj->prepare($this->query);
 
 			if(is_object($dbRes))
 			{
@@ -226,27 +230,27 @@ class Hopper
 		if($update)
 		{
 			array_pop($fields);
-			$query = "UPDATE ".$table.' SET '.implode("=?, ",$fields).'=? WHERE '.$idfield.'=?';
+			$this->query = "UPDATE ".$table.' SET '.implode("=?, ",$fields).'=? WHERE '.$idfield.'=?';
 		} 
 		else 
 		{
-			$query = "INSERT INTO ".$table.' ('.implode(',',$fields).') VALUES(?';
+			$this->query = "INSERT INTO ".$table.' ('.implode(',',$fields).') VALUES(?';
 			for ($i=1; $i < $fieldCount; $i++)
 			{ 
-				$query .= ',?';
+				$this->query .= ',?';
 			}
-			$query .= ') ';
+			$this->query .= ') ';
 		}
 		
 		try {
 			if(!is_object($this->obj))
 			{
-				$this->setError("Database object not created.".' | Query: '.$query);
+				$this->setError("Database object not created.".' | Query: '.$this->query);
 				return false;
 			}
 			else
 			{
-				$dbRes = $this->obj->prepare($query);
+				$dbRes = $this->obj->prepare($this->query);
 
 				if(is_object($dbRes))
 				{
@@ -258,11 +262,11 @@ class Hopper
 						return $this->obj->lastInsertId(); # insert
 				}
 				else
-					$this->setError("Database prepare statement didn't return an object.".' | Query: '.$query);
+					$this->setError("Database prepare statement didn't return an object.".' | Query: '.$this->query);
 			}
 		}
 		catch(PDOException $ex) {
-			$this->setError($ex->getMessage().' | Query: '.$query);
+			$this->setError($ex->getMessage().' | Query: '.$this->query);
 			return false;
 		}
 	}
