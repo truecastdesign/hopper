@@ -53,7 +53,8 @@ class Hopper
 				if(isset($config->port)) $dsn .= ';port='.$config->port;
 				
 				if(isset($config->emulate_prepares)) $options [PDO::ATTR_EMULATE_PREPARES] = $config->emulate_prepares;
-				if(isset($config->error_mode)) $options [PDO::ATTR_ERRMODE] = $config->error_mode;
+				if(isset($config->error_mode)) { $options [PDO::ATTR_ERRMODE] = $config->error_mode; }
+				else { $options [PDO::ATTR_ERRMODE] = PDO::ERRMODE_EXCEPTION; }
 				if(isset($config->persistent)) $options [PDO::ATTR_PERSISTENT] = $config->persistent;
 				if(isset($config->compress)) $options [PDO::MYSQL_ATTR_COMPRESS] = $config->compress;
 				if(isset($config->buffer)) $options [PDO::MYSQL_ATTR_USE_BUFFERED_QUERY] = $config->buffer;
@@ -61,7 +62,7 @@ class Hopper
 				try {
 					$this->obj = new PDO($dsn, $config->username, $config->password, $options);
 				}
-				catch(PDOException $ex) { 
+				catch(\PDOException $ex) { 
 					$this->setError($ex->getMessage()." ".$errorMsg);
 					return false;
 				}
@@ -73,7 +74,7 @@ class Hopper
 				try {
 					$this->obj = new PDO($dsn);
 				}
-				catch(PDOException $ex) { 
+				catch(\PDOException $ex) { 
 					$this->setError($ex->getMessage()." ".$errorMsg);
 					return false;
 				}
@@ -97,7 +98,7 @@ class Hopper
 			$this->result = $this->obj->query($query); 
 			return true;
 		}
-		catch(PDOException $ex) { 
+		catch(\PDOException $ex) { 
 			$this->setError($ex->getMessage().' '.$errorMsg); 
 			return false;
 		}
@@ -134,7 +135,7 @@ class Hopper
 
 			return true;
 		}
-		catch(PDOException $ex) { 
+		catch(\PDOException $ex) { 
 			$this->setError($ex->getMessage()." ".$errorMsg.' | Query: '.$query);
 			return false;
 		}
@@ -186,7 +187,7 @@ class Hopper
 				return false;
 			}
 		}
-		catch(PDOException $ex) {
+		catch(\PDOException $ex) {
 			$this->setError($ex->getMessage()." ".$errorMsg);
 			return false;
 		}
@@ -265,7 +266,7 @@ class Hopper
 					$this->setError("Database prepare statement didn't return an object.".' | Query: '.$this->query);
 			}
 		}
-		catch(PDOException $ex) {
+		catch(\PDOException $ex) {
 			$this->setError($ex->getMessage().' | Query: '.$this->query);
 			return false;
 		}
@@ -288,6 +289,7 @@ class Hopper
 	public function get($query, $get=null, $type='array', $arrayIndex=null, $errorMsg='')
 	{
 		$this->query = $query;
+		$output = [];
 		
 		if(!is_object($this->obj)) 
 		{
@@ -397,7 +399,7 @@ class Hopper
 				return $result;
 			}
 		}
-		catch(PDOException $ex) {
+		catch(\PDOException $ex) {
 			$this->setError($ex->getMessage());
 			return false;
 		}
@@ -461,7 +463,7 @@ class Hopper
 		try { 
 			$this->obj->prepare($deleteQuery)->execute($deleteValues); 
 		}
-		catch(PDOException $ex) {
+		catch(\PDOException $ex) {
 			$this->setError($ex->getMessage());
 		}
 		
@@ -501,7 +503,7 @@ class Hopper
 		$insertQuery .= $valuesStr;
 				
 		try { $this->obj->prepare($insertQuery)->execute($allValues); }
-		catch(PDOException $ex) { $this->errorMsg .= $ex->getMessage(); $this->setError();}
+		catch(\PDOException $ex) { $this->errorMsg .= $ex->getMessage(); $this->setError();}
 		
 	}
 	
@@ -570,7 +572,7 @@ class Hopper
 			else
 				$this->setError('Table not created!');
 		}
-		catch(PDOException $ex) {
+		catch(\PDOException $ex) {
 			$this->setError($ex->getMessage());
 		}
 	}
@@ -644,7 +646,7 @@ class Hopper
 			else
 				return $dbres->fetchAll(PDO::FETCH_ASSOC);
 		}
-		catch(PDOException $ex) { $this->errorMsg .= $ex->getMessage(); $this->display_error($query);}
+		catch(\PDOException $ex) { $this->errorMsg .= $ex->getMessage(); $this->display_error($query);}
 	}
 	
 	/**
@@ -678,7 +680,7 @@ class Hopper
 			
 			return array_merge($result, $result2);
 		}
-		catch(PDOException $ex) { $this->errorMsg .= $ex->getMessage(); $this->display_error($query);}
+		catch(\PDOException $ex) { $this->errorMsg .= $ex->getMessage(); $this->display_error($query);}
 	}
 	
 
@@ -721,7 +723,7 @@ class Hopper
 			}
 			return $menuData;
 		}
-		catch(PDOException $ex) { $this->errorMsg .= $ex->getMessage(); $this->display_error($query);}
+		catch(\PDOException $ex) { $this->errorMsg .= $ex->getMessage(); $this->display_error($query);}
 	}
 
 	/**
