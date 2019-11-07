@@ -8,7 +8,7 @@ use PDO;
  *
  * @package True Framework 6
  * @author Daniel Baldwin
- * @version 1.4.3
+ * @version 1.4.4
  * @copyright 2019 Truecast Design Studio
  */
 class Hopper
@@ -277,7 +277,7 @@ class Hopper
 	 *
 	 * @param string $query - mysql query
 	 * @param array $get - array of fields and values
-	 * @param string $type - return an array | arrays | 2dim (deprecated: use arrays instead) | object | class | bound | number | value. 2dim will always return a two-dimensional array
+	 * @param string $type - return an array | list (multi row, one field as value array) | arrays | 2dim (deprecated: use arrays instead) | object | class | bound | number | value. 2dim will always return a two-dimensional array
 	 * @param string $arrayIndex - alternate field should be the array index for multidimensional arrays 
 	 * @param string $errorMsg - custom error message
 	 * @return array | object; default is an object
@@ -300,6 +300,7 @@ class Hopper
 		switch($type)
 		{
 			case 'array': $pdoType = 2; break;
+			case 'list': $pdoType = 2; break;
 			case 'arrays': $pdoType = 2; break;
 			case '2dim': $pdoType = 2; break;
 			case 'object': $pdoType = PDO::FETCH_OBJ; break;
@@ -339,7 +340,7 @@ class Hopper
 				return false;
 			}
 			
-			if($dbRes->rowCount() > 1 OR $type == '2dim' OR $type == 'arrays' OR $type == 'objects')
+			if($dbRes->rowCount() > 1 OR $type == '2dim' OR $type == 'arrays' OR $type == 'objects' OR $type == 'list')
 			{
 				$result = $dbRes->fetchAll($pdoType);
 			}
@@ -347,13 +348,14 @@ class Hopper
 			{
 				$result = $dbRes->fetch($pdoType);
 			}
+
 			if(is_array($result))
 			{
 				if($arrayIndex == null)
 				{
 					if($type=='value' OR $type=='number')
 						return current($result); # changed from $array[0]
-					elseif($type=='array')
+					elseif($type=='array' OR $type=='list')
 					{
 						# if it is a multi-dim array make it 1 dim
 						if(isset($result[0]) and @is_array($result[0]))
@@ -364,13 +366,18 @@ class Hopper
 							}
 							return $tmpArray;
 						}
-						else # removes arrays with a string key on them which causes problems with values lists on get queries
+						else 
 						{
-							return array_values($result);
-						}
+							if ($type=='list') {
+								return array_values($result);
+							}
+							else {
+								return $result;
+							}
+						}						
 					}
-					else
-					{
+					
+					else {
 						return $result;
 					}
 						
