@@ -8,7 +8,7 @@ use PDO;
  *
  * @package True Framework 6
  * @author Daniel Baldwin
- * @version 1.4.1
+ * @version 1.4.3
  * @copyright 2019 Truecast Design Studio
  */
 class Hopper
@@ -366,10 +366,8 @@ class Hopper
 						}
 						else # removes arrays with a string key on them which causes problems with values lists on get queries
 						{
-							return $result;
+							return array_values($result);
 						}
-						
-						
 					}
 					else
 					{
