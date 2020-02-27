@@ -1,7 +1,7 @@
 Hopper - Database Abstraction Layer (DBAL) for PHP
 =======================================
 
-Version: v1.4.4
+Version: v1.4.5
 
 This library provides a simple and powerful way to SET and GET records from a PDO database. It has many powerful database interaction methods that have been developed over the past 10 years.
 
