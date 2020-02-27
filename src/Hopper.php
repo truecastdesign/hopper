@@ -8,8 +8,8 @@ use PDO;
  *
  * @package True Framework 6
  * @author Daniel Baldwin
- * @version 1.4.4
- * @copyright 2019 Truecast Design Studio
+ * @version 1.4.5
+ * @copyright 2020 Truecast Design Studio
  */
 class Hopper
 {
@@ -104,7 +104,7 @@ class Hopper
 		}
 	}
 	
-	public function execute($query, $values, $errorMsg='')
+	public function execute($query, $values = [], $errorMsg='')
 	{
 		$this->query = $query;
 
@@ -125,7 +125,11 @@ class Hopper
 
 			if(is_object($dbRes))
 			{
-				$dbRes->execute($values);
+				if (count($values) > 0) {
+					$dbRes->execute($values);
+				} else {
+					$dbRes->execute();
+				}
 			}	
 			else
 			{
@@ -256,7 +260,7 @@ class Hopper
 				if(is_object($dbRes))
 				{
 					$dbRes->execute($values);
-
+					
 					if(isset($set[$idfield])) 
 						return $set[$idfield]; # update
 					else
@@ -738,13 +742,14 @@ class Hopper
 	 * @return null
 	 */
 	public function empty(string $table)
-	{
-		if($this->driver == 'mysql')
-			$this->execute("TRUNCATE TABLE `".$table."`", []);
+	{ 
+		if($this->driver == 'mysql') {
+			$this->query("TRUNCATE TABLE `".$table."`");
+		}
 		elseif($this->driver == 'sqlite')
 		{
-			$this->execute("DELETE FROM `".$table."`", []);
-			$this->execute("VACUUM", []);
+			$this->query("DELETE FROM `".$table."`");
+			$this->query("VACUUM");
 		}	
 	}
 	
