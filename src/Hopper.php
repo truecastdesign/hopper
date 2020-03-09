@@ -8,7 +8,7 @@ use PDO;
  *
  * @package True Framework 6
  * @author Daniel Baldwin
- * @version 1.4.5
+ * @version 1.4.6
  * @copyright 2020 Truecast Design Studio
  */
 class Hopper
@@ -289,6 +289,8 @@ class Hopper
 	 *
 	 * @example get('select * from table where id IN(?,?)', array(1,3))
 	 * @example get('select * from table where id=?, year=?', array(1,1998))
+	 * @example get('select meta_key,meta_value from wp_postmeta where post_id=?', [4379], 'keypair')
+	 * @example get('select meta_key,meta_value from wp_postmeta where meta_key=? and meta_value=?', ['_billing_address_1', '40845 McQueen Dr'] , 'keypair')
 	 */
 	public function get($query, $get=null, $type='array', $arrayIndex=null, $errorMsg='')
 	{
