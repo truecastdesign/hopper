@@ -1,7 +1,7 @@
 Hopper - Database Abstraction Layer (DBAL) for PHP
 =======================================
 
-Version: v1.4.6
+Version: v1.5.1
 
 This library provides a simple and powerful way to SET and GET records from a PDO database. It has many powerful database interaction methods that have been developed over the past 10 years.
 
@@ -35,6 +35,20 @@ $DB->set('table_name', ['first_name'=>'Tim', 'last_name'=>'Baldwin', 'phone'=>'5
 
 # update a record
 $DB->set('table_name', ['id'=>1, 'phone'=>'541-555-5556']);
+
+# execute your own update or insert query and check if it was successful
+if ($DB->execute('update tablename set field1=?, field2=? where field3=?', ['val1', 'val2', 'val3'])) {
+	# updated row
+} else {
+	# didn't update row
+}
+
+# execute your own update or insert query and check if it was successful
+if ($DB->execute('insert into tablename set field1=?, field2=? where field3=?', ['val1', 'val2', 'val3'])) {
+	# updated row
+} else {
+	# didn't update row
+}
 
 # get single record
 $recordObj = $DB->get('select * from table_name where id=?', [1], 'object');

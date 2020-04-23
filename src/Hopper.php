@@ -8,7 +8,7 @@ use PDO;
  *
  * @package True Framework 6
  * @author Daniel Baldwin
- * @version 1.4.6
+ * @version 1.5.1
  * @copyright 2020 Truecast Design Studio
  */
 class Hopper
@@ -52,13 +52,14 @@ class Hopper
 				if(isset($config->charset)) $dsn .= ';charset='.$config->charset;
 				if(isset($config->port)) $dsn .= ';port='.$config->port;
 				
-				if(isset($config->emulate_prepares)) $options [PDO::ATTR_EMULATE_PREPARES] = $config->emulate_prepares;
-				if(isset($config->error_mode)) { $options [PDO::ATTR_ERRMODE] = $config->error_mode; }
-				else { $options [PDO::ATTR_ERRMODE] = PDO::ERRMODE_EXCEPTION; }
-				if(isset($config->persistent)) $options [PDO::ATTR_PERSISTENT] = $config->persistent;
-				if(isset($config->compress)) $options [PDO::MYSQL_ATTR_COMPRESS] = $config->compress;
-				if(isset($config->buffer)) $options [PDO::MYSQL_ATTR_USE_BUFFERED_QUERY] = $config->buffer;
-				
+				if(isset($config->emulate_prepares)) $options[PDO::ATTR_EMULATE_PREPARES] = $config->emulate_prepares;
+				if(isset($config->error_mode)) { $options[PDO::ATTR_ERRMODE] = $config->error_mode; }
+				else { $options[PDO::ATTR_ERRMODE] = PDO::ERRMODE_EXCEPTION; }
+				if(isset($config->persistent)) $options[PDO::ATTR_PERSISTENT] = $config->persistent;
+				if(isset($config->compress)) $options[PDO::MYSQL_ATTR_COMPRESS] = $config->compress;
+				if(isset($config->buffer)) $options[PDO::MYSQL_ATTR_USE_BUFFERED_QUERY] = $config->buffer;	
+				$options[PDO::MYSQL_ATTR_FOUND_ROWS] = true;
+
 				try {
 					$this->obj = new PDO($dsn, $config->username, $config->password, $options);
 				}
@@ -130,14 +131,20 @@ class Hopper
 				} else {
 					$dbRes->execute();
 				}
+
+				$this->rowCount = $dbRes->rowCount();
+
+				if ($dbRes->rowCount() > 0) {
+					return true;
+				} else {
+					return false;
+				}
 			}	
 			else
 			{
 				$this->setError("Table not created. ".$errorMsg.' | Query: '.$query);
 				return false;
 			}
-
-			return true;
 		}
 		catch(\PDOException $ex) { 
 			$this->setError($ex->getMessage()." ".$errorMsg.' | Query: '.$query);
@@ -281,7 +288,7 @@ class Hopper
 	 *
 	 * @param string $query - mysql query
 	 * @param array $get - array of fields and values
-	 * @param string $type - return an array | list (multi row, one field as value array) | arrays | 2dim (deprecated: use arrays instead) | object | class | bound | number | value. 2dim will always return a two-dimensional array
+	 * @param string $type - return an array | list (multi row, one field as value array) | arrays | 2dim (deprecated: use arrays instead) | object | class | bound | number | value | keypair. 2dim will always return a two-dimensional array
 	 * @param string $arrayIndex - alternate field should be the array index for multidimensional arrays 
 	 * @param string $errorMsg - custom error message
 	 * @return array | object; default is an object
@@ -430,6 +437,8 @@ class Hopper
 		}
 		return $this;
 	}
+
+	
 	
 	/**
 	 * set for Scalable Key-Value table
@@ -595,6 +604,20 @@ class Hopper
 	public function lastInsertId()
 	{
 		return (int) $this->obj->lastInsertId();
+	}
+
+	/**
+	 * Check if the update was successfully updated a row
+	 *
+	 * @return bool
+	 */
+	public function updated()
+	{
+		if ($this->rowCount > 0) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 	
 	/**
