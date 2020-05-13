@@ -8,7 +8,7 @@ use PDO;
  *
  * @package True Framework 6
  * @author Daniel Baldwin
- * @version 1.5.1
+ * @version 1.5.2
  * @copyright 2020 Truecast Design Studio
  */
 class Hopper
@@ -224,7 +224,7 @@ class Hopper
 		$fieldCount = count($set);
 		if($fieldCount < 1)
 		{
-			$this->setError('Key/Value array empty! '.$errorMsg);
+			$this->setError('Key/Value array empty!');
 			return false;
 		}
 		
