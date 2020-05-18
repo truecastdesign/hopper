@@ -8,7 +8,7 @@ use PDO;
  *
  * @package True Framework 6
  * @author Daniel Baldwin
- * @version 1.5.2
+ * @version 1.5.3
  * @copyright 2020 Truecast Design Studio
  */
 class Hopper
@@ -25,12 +25,13 @@ class Hopper
 	private $queryList = array();
 	private $driver = '';
 	private $extraQuery = '';
+	private $config = null;
 	
 	
 	/**
 	 * construct
 	 *
-	 * @param array|object $config  array( 'driver' => 'mysql', 'host' => 'localhost', 'username' => '', 'password' => '', 'database' => '', 'emulate_prepares'=>false, 'error_mode'=>PDO::ERRMODE_EXCEPTION, 'persistent'=> false, 'compress'=> false, 'charset' => 'utf8', 'port'=>3306, 'buffer'=>true );
+	 * @param array|object $config  array( 'driver' => 'mysql', 'host' => 'localhost', 'username' => '', 'password' => '', 'database' => '', 'emulate_prepares'=>false, 'error_mode'=>PDO::ERRMODE_EXCEPTION, 'persistent'=> false, 'compress'=> false, 'charset' => 'utf8', 'port'=>3306, 'buffer'=>true, 'debug'=>true );
 	 * For SQLITE: use a config like ['driver'=>'sqlite', 'database'=>'data/main.db']
 	 * @author Daniel Baldwin
 	 */
@@ -38,13 +39,15 @@ class Hopper
 	{		
 		$options = [];
 
-		if(is_array($config))
+		if(is_array($config)) {
 			$config = (object) $config;
+		}
+
+		$this->config = $config;
 
 		$this->driver = $config->driver;
 
-		switch($config->driver)
-		{
+		switch($config->driver) {
 			case 'mysql':
 				if(isset($config->host)) $dsn = 'mysql:host='.$config->host;
 				else $dsn = 'mysql:host=localhost';
@@ -221,9 +224,9 @@ class Hopper
 	{
 		$update = false;
 		
-		$fieldCount = count($set);
-		if($fieldCount < 1)
-		{
+		if (isset($set) and is_array($set)) {
+			$fieldCount = count($set);
+		} else {
 			$this->setError('Key/Value array empty!');
 			return false;
 		}
@@ -634,6 +637,10 @@ class Hopper
 			$errorMsg = $errorMsg.' : ';
 		
 		$this->errorMsg .= $errorMsg.'Query '.htmlspecialchars((is_array($this->query)? implode(",", $this->query):$this->query)).' in '.$trace[2]['class'].'::'.$trace[2]['function'].' on line '.$trace[1]['line'].' in the file '.$trace[1]['file']."<br>";
+
+		if (isset($this->config->debug) and $this->config->debug) {
+			trigger_error($this->errorMsg, 256);
+		}
 	}
 
 	/**
