@@ -8,7 +8,7 @@ use PDO;
  *
  * @package True Framework 6
  * @author Daniel Baldwin
- * @version 1.5.3
+ * @version 1.5.4
  * @copyright 2020 Truecast Design Studio
  */
 class Hopper
@@ -79,7 +79,7 @@ class Hopper
 					$this->obj = new PDO($dsn);
 				}
 				catch(\PDOException $ex) { 
-					$this->setError($ex->getMessage()." ".$errorMsg);
+					$this->setError($ex->getMessage());
 					return false;
 				}
 			break;
@@ -636,7 +636,7 @@ class Hopper
 		if(!empty($errorMsg))
 			$errorMsg = $errorMsg.' : ';
 		
-		$this->errorMsg .= $errorMsg.'Query '.htmlspecialchars((is_array($this->query)? implode(",", $this->query):$this->query)).' in '.$trace[2]['class'].'::'.$trace[2]['function'].' on line '.$trace[1]['line'].' in the file '.$trace[1]['file']."<br>";
+		$this->errorMsg .= $errorMsg.'Query '.htmlspecialchars((is_array($this->query)? implode(",", $this->query):$this->query)).' in '.(isset($trace[2]['class'])? $trace[2]['class']:'').'::'.(isset($trace[2]['function'])? $trace[2]['function']:'').' on line '.(isset($trace[1]['line'])? $trace[1]['line']:'').' in the file '.(isset($trace[1]['file'])? $trace[1]['file']:'')."<br>";
 
 		if (isset($this->config->debug) and $this->config->debug) {
 			trigger_error($this->errorMsg, 256);
