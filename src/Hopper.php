@@ -8,7 +8,7 @@ use PDO;
  *
  * @package True Framework 6
  * @author Daniel Baldwin
- * @version 1.5.4
+ * @version 1.5.5
  * @copyright 2020 Truecast Design Studio
  */
 class Hopper
@@ -498,8 +498,7 @@ class Hopper
 		("$artist", "$album", "$track4", "$length4"),
 		("$artist", "$album", "$track5", "$length5");*/
 		
-		$allFields = array_keys($dependantFields);
-		
+		$allFields[] = $settings['record_id_field'];
 		$allFields[] = $settings['key_field'];
 		$allFields[] = $settings['value_field'];
 		
