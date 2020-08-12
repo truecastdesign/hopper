@@ -32,7 +32,7 @@ class Hopper
 	 * construct
 	 *
 	 * @param array|object $config  array( 'driver' => 'mysql', 'host' => 'localhost', 'username' => '', 'password' => '', 'database' => '', 'emulate_prepares'=>false, 'error_mode'=>PDO::ERRMODE_EXCEPTION, 'persistent'=> false, 'compress'=> false, 'charset' => 'utf8', 'port'=>3306, 'buffer'=>true, 'debug'=>true );
-	 * For SQLITE: use a config like ['driver'=>'sqlite', 'database'=>'data/main.db']
+	 * For SQLITE: use a config like ['driver'=>'sqlite', 'database'=>BP.'/app/data/main.sqlite']
 	 * @author Daniel Baldwin
 	 */
 	public function __construct($config)
