@@ -8,7 +8,7 @@ use PDO;
  *
  * @package True Framework 6
  * @author Daniel Baldwin
- * @version 1.5.5
+ * @version 1.6.0
  * @copyright 2020 Truecast Design Studio
  */
 class Hopper
@@ -220,10 +220,10 @@ class Hopper
 	 * @example set('table',array('field1'=>'value1', 'field2'=>'value2')) # insert values
 	 * @example set('table',array('id'=>6, 'field1'=>'value1', 'field2'=>'value2')) # update row where id=6
 	 */
-	public function set($table, $set=null, $idfield='id')
+	public function set(string $table, array $set, $idfield='id')
 	{
 		$update = false;
-		
+
 		if (isset($set) and is_array($set)) {
 			$fieldCount = count($set);
 		} else {
@@ -231,8 +231,7 @@ class Hopper
 			return false;
 		}
 		
-		if(isset($set[$idfield]))
-		{
+		if (isset($set[$idfield])) {
 			$update = true;
 			$idValue = $set[$idfield];
 			unset($set[$idfield]);
@@ -242,8 +241,7 @@ class Hopper
 		$values = array_values($set);
 		$fields = array_keys($set);
 		
-		if($update)
-		{
+		if ($update) {
 			array_pop($fields);
 			$this->query = "UPDATE ".$table.' SET '.implode("=?, ",$fields).'=? WHERE '.$idfield.'=?';
 		} 
@@ -284,6 +282,39 @@ class Hopper
 			$this->setError($ex->getMessage().' | Query: '.$this->query);
 			return false;
 		}
+	}
+
+	/**
+	 * Insert multiple rows in one query
+	 *
+	 * @param string $table table name - required
+	 * @param array $fields ['field1','field2'] - required
+	 * @param array $values [['a','b'],['c','d']] - required
+	 * @return void
+	 */
+	public function insertMultiple(string $table, array $fields, array $values)
+	{
+		if (!$this->isMultiArray($values))
+			throw new \Exception("The values array is not a multideminsional array!");
+		
+		if (count($fields) == 0)
+			throw new \Exception("The fields array does not contain any fields!");
+		
+		$insertValues = [];
+		$placeHolders = [];
+		foreach ($values as $row){
+			$placeHolders[] = '('.rtrim(str_repeat('?,', count($row)), ',').')';
+			$insertValues = array_merge($insertValues, array_values($row));
+		}
+
+		$this->query = "INSERT INTO ".$table.' ('.implode(',',$fields).') VALUES '.implode(',', $placeHolders);
+			
+		$dbRes = $this->obj->prepare($this->query);
+
+		if (!is_object($dbRes))
+			throw new \Exception("Database prepare statement didn't return an object.".' | Query: '.$this->query);
+		
+		$dbRes->execute($insertValues);
 	}
 	
 	/**
@@ -783,5 +814,16 @@ class Hopper
 			$this->query("VACUUM");
 		}	
 	}
+
+	/**
+	 * Check if array is Multidimensional
+	 *
+	 * @param array $array array to check
+	 * @return boolean 
+	 */
+	private function isMultiArray(array $array) { 
+		rsort($array); 
+		return isset( $array[0] ) && is_array( $array[0] ); 
+	} 
 	
 }
