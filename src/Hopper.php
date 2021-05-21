@@ -8,8 +8,8 @@ use PDO;
  *
  * @package True Framework 6
  * @author Daniel Baldwin
- * @version 1.6.0
- * @copyright 2020 Truecast Design Studio
+ * @version 1.6.1
+ * @copyright 2021 Truecast Design Studio
  */
 class Hopper
 {
@@ -32,6 +32,28 @@ class Hopper
 	 * construct
 	 *
 	 * @param array|object $config  array( 'driver' => 'mysql', 'host' => 'localhost', 'username' => '', 'password' => '', 'database' => '', 'emulate_prepares'=>false, 'error_mode'=>PDO::ERRMODE_EXCEPTION, 'persistent'=> false, 'compress'=> false, 'charset' => 'utf8', 'port'=>3306, 'buffer'=>true, 'debug'=>true );
+	 * 
+	 * $config->sslCertAuthority
+	 * The file path to the SSL certificate authority.
+	 * 
+	 * $config->sslCaCertificates
+	 * The file path to the directory that contains the trusted SSL CA certificates, which are stored in PEM format.
+	 * 
+	 * $config->sslCert
+	 * The file path to the SSL certificate.
+	 * 
+	 * $config->sslCipher
+	 * A list of one or more permissible ciphers to use for SSL encryption, in a format understood by OpenSSL. For example: DHE-RSA-AES256-SHA:AES128-SHA
+	 * 
+	 * $config->sslKey
+	 * The file path to the SSL key.
+	 * 
+	 * $config->sslVerifyCert
+	 * Provides a way to disable verification of the server SSL certificate.
+	 * 
+	 * $config->multiStatements
+	 * Disables multi query execution in both PDO::prepare() and PDO::query() when set to false.
+	 * 
 	 * For SQLITE: use a config like ['driver'=>'sqlite', 'database'=>BP.'/app/data/main.sqlite']
 	 * @author Daniel Baldwin
 	 */
@@ -61,6 +83,14 @@ class Hopper
 				if(isset($config->persistent)) $options[PDO::ATTR_PERSISTENT] = $config->persistent;
 				if(isset($config->compress)) $options[PDO::MYSQL_ATTR_COMPRESS] = $config->compress;
 				if(isset($config->buffer)) $options[PDO::MYSQL_ATTR_USE_BUFFERED_QUERY] = $config->buffer;	
+				if(isset($config->sslCertAuthority)) $options[PDO::MYSQL_ATTR_SSL_CA] = $config->sslCertAuthority;	
+				if(isset($config->sslCaCertificates)) $options[PDO::MYSQL_ATTR_SSL_CAPATH] = $config->sslCaCertificates;	
+				if(isset($config->sslCert)) $options[PDO::MYSQL_ATTR_SSL_CERT] = $config->sslCert;	
+				if(isset($config->sslCipher)) $options[PDO::MYSQL_ATTR_SSL_CIPHER] = $config->sslCipher;	
+				if(isset($config->sslKey)) $options[PDO::MYSQL_ATTR_SSL_KEY] = $config->sslKey;	
+				if(isset($config->sslVerifyCert)) $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = $config->sslVerifyCert;	
+				if(isset($config->multiStatements)) $options[PDO::MYSQL_ATTR_MULTI_STATEMENTS] = $config->multiStatements;	
+				
 				$options[PDO::MYSQL_ATTR_FOUND_ROWS] = true;
 
 				try {
@@ -227,8 +257,7 @@ class Hopper
 		if (isset($set) and is_array($set)) {
 			$fieldCount = count($set);
 		} else {
-			$this->setError('Key/Value array empty!');
-			return false;
+			throw new \Exception('Key/Value array empty!');
 		}
 		
 		if (isset($set[$idfield])) {
@@ -255,18 +284,14 @@ class Hopper
 			$this->query .= ') ';
 		}
 		
-		try {
+		// try {
 			if(!is_object($this->obj))
-			{
-				$this->setError("Database object not created.".' | Query: '.$this->query);
-				return false;
-			}
-			else
-			{
+				throw new \Exception("Database object not created.".' | Query: '.$this->query);
+			
+			else {
 				$dbRes = $this->obj->prepare($this->query);
 
-				if(is_object($dbRes))
-				{
+				if (is_object($dbRes)) {
 					$dbRes->execute($values);
 					
 					if(isset($set[$idfield])) 
@@ -275,13 +300,13 @@ class Hopper
 						return $this->obj->lastInsertId(); # insert
 				}
 				else
-					$this->setError("Database prepare statement didn't return an object.".' | Query: '.$this->query);
+					throw new \Exception("Database prepare statement didn't return an object.".' | Query: '.$this->query);
 			}
-		}
-		catch(\PDOException $ex) {
-			$this->setError($ex->getMessage().' | Query: '.$this->query);
-			return false;
-		}
+		// }
+		// catch(\PDOException $ex) {
+		// 	$this->setError($ex->getMessage().' | Query: '.$this->query);
+		// 	return false;
+		// }
 	}
 
 	/**
@@ -314,7 +339,11 @@ class Hopper
 		if (!is_object($dbRes))
 			throw new \Exception("Database prepare statement didn't return an object.".' | Query: '.$this->query);
 		
-		$dbRes->execute($insertValues);
+		try {
+			$dbRes->execute($insertValues);
+		} catch(\PDOException $ex) {
+			throw new \Exception($ex->getMessage().' | Query: '.$this->query.' | Values: '.print_r($insertValues, true));
+		}
 	}
 	
 	/**
@@ -338,14 +367,10 @@ class Hopper
 		$this->query = $query;
 		$output = [];
 		
-		if(!is_object($this->obj)) 
-		{
-			$this->setError("Database object in DBPDO not available");
-			return false;
-		}	
+		if (!is_object($this->obj))
+			throw new \Exception("Database object in DBPDO not available");
 		
-		switch($type)
-		{
+		switch ($type) {
 			case 'array': $pdoType = 2; break;
 			case 'list': $pdoType = 2; break;
 			case 'arrays': $pdoType = 2; break;
@@ -358,103 +383,76 @@ class Hopper
 			case 'value': $pdoType = 2; break;
 			case 'keypair': $pdoType = PDO::FETCH_KEY_PAIR; break;
 			default: $pdoType = 5; break;
-		}
+		}	
+
+		if (is_array($get))
+			$dbRes = $this->obj->prepare($query.$this->extraQuery);
+		else
+			$dbRes = $this->obj->query($query.$this->extraQuery);
+
 		
-		try {
-			if(is_array($get))
-			{
-				$dbRes = $this->obj->prepare($query.$this->extraQuery);
-			}	
-			else
-			{
-				$dbRes = $this->obj->query($query.$this->extraQuery);
-			}
-
-			if(is_object($dbRes))
-			{
-				if(is_array($get)) 
-				{
+		if (is_object($dbRes)) {
+			try {
+				if (is_array($get)) 
 					$dbRes->execute($get);
-				}
 				else
-				{
 					$dbRes->execute();
-				}
-			}	
-			else
-			{
-				$this->setError("Table not created.");
-				return false;
+			} catch (\PDOException $e) {
+				throw new \Exception($e->getMessage().'. Query: '.$query.$this->extraQuery);
 			}
-			
-			if($dbRes->rowCount() > 1 OR $type == '2dim' OR $type == 'arrays' OR $type == 'objects' OR $type == 'list')
-			{
-				$result = $dbRes->fetchAll($pdoType);
-			}
-			else
-			{
-				$result = $dbRes->fetch($pdoType);
-			}
+		}	
+		else
+			throw new \Exception("Table not created.");
 
-			if(is_array($result))
-			{
-				if($arrayIndex == null)
+		$this->extraQuery = ''; # empty this so a subequent query will not run it again.
+		
+		if ($dbRes->rowCount() > 1 OR $type == '2dim' OR $type == 'arrays' OR $type == 'objects' OR $type == 'list')
+			$result = $dbRes->fetchAll($pdoType);
+		else
+			$result = $dbRes->fetch($pdoType);
+
+		if (is_array($result)) {
+			if ($arrayIndex == null) {
+				if($type=='value' OR $type=='number')
+					return current($result); # changed from $array[0]
+				elseif ($type=='array' OR $type=='list')
 				{
-					if($type=='value' OR $type=='number')
-						return current($result); # changed from $array[0]
-					elseif($type=='array' OR $type=='list')
-					{
-						# if it is a multi-dim array make it 1 dim
-						if(isset($result[0]) and @is_array($result[0]))
+					# if it is a multi-dim array make it 1 dim
+					if(isset($result[0]) and @is_array($result[0])) {
+						foreach($result as $values)
 						{
-							foreach($result as $values)
-							{
-								$tmpArray[] = current($values);
-							}
-							return $tmpArray;
+							$tmpArray[] = current($values);
 						}
-						else 
-						{
-							if ($type=='list') {
-								return array_values($result);
-							}
-							else {
-								return $result;
-							}
-						}						
+						return $tmpArray;
 					}
-					
 					else {
-						return $result;
-					}
-						
-				}	
-				else
-				{
-					foreach($result as $item)
-					{
-						if(is_array($item))
-						{
-							$output[$item[$arrayIndex]] = $item;
-						}
-						elseif(is_object($item))
-						{
-							$output[$item->{$arrayIndex}] = $item;
-						}
-					}
-					return $output;
+						if ($type=='list')
+							return array_values($result);
+						else
+							return $result;
+					}						
 				}
-			}
-			elseif(is_object($result))
-			{
-
-				return $result;
+				
+				else
+					return $result;						
+			}	
+			else {
+				foreach($result as $item)
+				{
+					if(is_array($item))
+					{
+						$output[$item[$arrayIndex]] = $item;
+					}
+					elseif(is_object($item))
+					{
+						$output[$item->{$arrayIndex}] = $item;
+					}
+				}
+				return $output;
 			}
 		}
-		catch(\PDOException $ex) {
-			$this->setError($ex->getMessage());
-			return false;
-		}
+		elseif (is_object($result))
+			return $result;
 	}
 
 	/**
@@ -466,9 +464,8 @@ class Hopper
 	 */
 	public function sort($sort = null)
 	{
-		if (!empty($sort)) {
+		if (!empty($sort))
 			$this->extraQuery .= ' order by '.$sort;
-		}
 		return $this;
 	}
 
@@ -514,12 +511,8 @@ class Hopper
 		$deleteValues[] = $settings['record_id'];
 			
 		
-		try { 
-			$this->obj->prepare($deleteQuery)->execute($deleteValues); 
-		}
-		catch(\PDOException $ex) {
-			$this->setError($ex->getMessage());
-		}
+		$this->obj->prepare($deleteQuery)->execute($deleteValues); 
+
 		
 		/*INSERT INTO table (artist, album, track, length) 
 		VALUES 
@@ -535,7 +528,7 @@ class Hopper
 		
 		$insertQuery = "Insert into ".$table." (".implode(",",$allFields).") values ";
 		
-		foreach($set as $dataField=>$dataValue)
+		foreach ($set as $dataField=>$dataValue)
 		{
 			# build query string
 			$valuesStr .= '(?'.str_repeat(",?", count($allFields)-1).'),';
@@ -555,9 +548,7 @@ class Hopper
 		
 		$insertQuery .= $valuesStr;
 				
-		try { $this->obj->prepare($insertQuery)->execute($allValues); }
-		catch(\PDOException $ex) { $this->errorMsg .= $ex->getMessage(); $this->setError();}
-		
+		$this->obj->prepare($insertQuery)->execute($allValues);		
 	}
 	
 	
@@ -571,27 +562,29 @@ class Hopper
 		# build set pairs for database insert
 		if(is_array($keyFields))
 		{
-			if(count($keys) != count($keyFields)) { exception('key fields and key values count does not match.'); exit;}
-			for($i=0; $i<count($keyFields); $i++)
-			{
+			if (count($keys) != count($keyFields))
+				throw new \Exception('key fields and key values count does not match.');				
+			
+			for ($i=0; $i<count($keyFields); $i++) {
 				# for inserting key field values
-				if($set) $set .= ',';
+				if ($set) $set .= ',';
 				$set .= ' '.$keyFields[$i].'=\''.$keys[$i].'\'';
 				
 				# for checking if row exists in db
-				if($check) $check .= ' AND ';
+				if ($check) $check .= ' AND ';
 				$check .= ' '.$keyFields[$i].'=\''.$keys[$i].'\'';
 			}
 		}
 		else $set = ' '.$keyFields.'=\''.$keys.'\'';
 		
 		# check if more than one value field
-		if(is_array($valFields))
+		if (is_array($valFields))
 		{
-			if(count($values) != count($valFields)) { exception('value fields and value values count does not match.'); exit;}
-			for($i=0; $i<count($valFields); $i++)
-			{
-				if($setVal) $setVal .= ',';
+			if (count($values) != count($valFields))
+				throw new \Exception('value fields and value values count does not match.');
+
+			for ($i=0; $i<count($valFields); $i++) {
+				if ($setVal) $setVal .= ',';
 				$setVal .= ' '.$valFields[$i].'=\''.$values[$i].'\'';
 			}
 		}
@@ -615,19 +608,13 @@ class Hopper
 	 */
 	public function rowCount($query, $get=null, $errorMsg='')
 	{
-		try {
-			$dbRes = $this->obj->prepare($query);
-			if(is_object($dbRes))
-			{
-				$dbRes->execute($get);
-				return $dbRes->rowCount();
-			}	
-			else
-				$this->setError('Table not created!');
-		}
-		catch(\PDOException $ex) {
-			$this->setError($ex->getMessage());
-		}
+		$dbRes = $this->obj->prepare($query);
+		if (is_object($dbRes)) {
+			$dbRes->execute($get);
+			return $dbRes->rowCount();
+		}	
+		else
+			throw new \Exception('Table not created!');
 	}
 
 	/**

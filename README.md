@@ -1,7 +1,7 @@
 Hopper - Database Abstraction Layer (DBAL) for PHP
 =======================================
 
-Version: v1.6.0
+Version: v1.6.1
 
 This library provides a simple and powerful way to SET and GET records from a PDO database. It has many powerful database interaction methods that have been developed over the past 10 years.
 
@@ -89,6 +89,13 @@ emulate_prepares = false
 compress = true
 charset = 'utf8'
 buffer = true
+sslCertAuthority = '' // The file path to the SSL certificate authority.
+sslCaCertificates = '' // The file path to the directory that contains the trusted SSL CA certificates, which are stored in PEM format.
+sslCert = '' // The file path to the SSL certificate.
+sslCipher = '' // A list of one or more permissible ciphers to use for SSL encryption, in a format understood by OpenSSL. For example: DHE-RSA-AES256-SHA:AES128-SHA
+sslKey = '' // The file path to the SSL key.
+sslVerifyCert = '' // Provides a way to disable verification of the server SSL certificate.
+multiStatements = '' // Disables multi query execution in both PDO::prepare() and PDO::query() when set to false.
 ```
 
 Instantiate using a config file.
