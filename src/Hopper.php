@@ -8,7 +8,7 @@ use PDO;
  *
  * @package True Framework 6
  * @author Daniel Baldwin
- * @version 1.6.1
+ * @version 1.6.2
  * @copyright 2021 Truecast Design Studio
  */
 class Hopper
