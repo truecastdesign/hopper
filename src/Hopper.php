@@ -8,7 +8,7 @@ use PDO;
  *
  * @package True Framework 6
  * @author Daniel Baldwin
- * @version 1.6.2
+ * @version 1.6.3
  * @copyright 2021 Truecast Design Studio
  */
 class Hopper
@@ -26,6 +26,7 @@ class Hopper
 	private $driver = '';
 	private $extraQuery = '';
 	private $config = null;
+	private $rowCount = 0;
 	
 	
 	/**
@@ -402,7 +403,7 @@ class Hopper
 			}
 		}	
 		else
-			throw new \Exception("Table not created.");
+			throw new \Exception("Table not created. Query: ".$query.$this->extraQuery);
 
 		$this->extraQuery = ''; # empty this so a subequent query will not run it again.
 		
