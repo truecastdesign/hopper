@@ -8,8 +8,8 @@ use PDO;
  *
  * @package True Framework 6
  * @author Daniel Baldwin
- * @version 1.6.3
- * @copyright 2021 Truecast Design Studio
+ * @version 1.7.0
+ * @copyright 2024 Truecast Design Studio
  */
 class Hopper
 {
@@ -791,7 +791,7 @@ class Hopper
 	 * @param  string $table table name
 	 * @return null
 	 */
-	public function empty(string $table)
+	public function emptyTable(string $table)
 	{ 
 		if($this->driver == 'mysql') {
 			$this->query("TRUNCATE TABLE `".$table."`");
@@ -801,6 +801,16 @@ class Hopper
 			$this->query("DELETE FROM `".$table."`");
 			$this->query("VACUUM");
 		}	
+	}
+
+	/**
+	 * Returns the config object
+	 *
+	 * @return object
+	 */
+	public function getConfig()
+	{
+		return $this->config;
 	}
 
 	/**

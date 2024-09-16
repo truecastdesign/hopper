@@ -1,8 +1,6 @@
 Hopper - Database Abstraction Layer (DBAL) for PHP
 =======================================
 
-Version: v1.6.2
-
 This library provides a simple and powerful way to SET and GET records from a PDO database. It has many powerful database interaction methods that have been developed over the past 10 years.
 
 Install
@@ -124,3 +122,8 @@ $DB->setScalableKeyValue('table_name', ['first_name'=>'John', 'last_name'=>'Doe'
 
 More method documentation coming as soon as I have time to write it up.
 
+# Empty a table of data
+
+```php
+$DB->emptyTable('table_name');
+```
