@@ -8,7 +8,7 @@ use PDO;
  *
  * @package True Framework 6
  * @author Daniel Baldwin
- * @version 1.7.0
+ * @version 1.8.0
  * @copyright 2024 Truecast Design Studio
  */
 class Hopper
@@ -801,6 +801,14 @@ class Hopper
 			$this->query("DELETE FROM `".$table."`");
 			$this->query("VACUUM");
 		}	
+	}
+
+	/**
+	 * can be used instread of emptyTable
+	 */
+	public function truncate(string $table)
+	{
+		$this->emptyTable($table);
 	}
 
 	/**
