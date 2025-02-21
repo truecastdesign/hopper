@@ -8,8 +8,8 @@ use PDO;
  *
  * @package True Framework 6
  * @author Daniel Baldwin
- * @version 1.8.0
- * @copyright 2024 Truecast Design Studio
+ * @version 1.8.2
+ * @copyright 2025 Truecast Design Studio
  */
 class Hopper
 {
@@ -98,7 +98,7 @@ class Hopper
 					$this->obj = new PDO($dsn, $config->username, $config->password, $options);
 				}
 				catch(\PDOException $ex) { 
-					$this->setError($ex->getMessage()." ".$errorMsg);
+					$this->setError($ex->getMessage());
 					return false;
 				}
 			break;
@@ -407,14 +407,14 @@ class Hopper
 
 		$this->extraQuery = ''; # empty this so a subequent query will not run it again.
 		
-		if ($dbRes->rowCount() > 1 OR $type == '2dim' OR $type == 'arrays' OR $type == 'objects' OR $type == 'list')
+		if ($type == '2dim' OR $type == 'arrays' OR $type == 'objects' OR $type == 'list')
 			$result = $dbRes->fetchAll($pdoType);
 		else
 			$result = $dbRes->fetch($pdoType);
 
 		if (is_array($result)) {
 			if ($arrayIndex == null) {
-				if($type=='value' OR $type=='number')
+				if ($type=='value' OR $type=='number')
 					return current($result); # changed from $array[0]
 				elseif ($type=='array' OR $type=='list')
 				{
@@ -651,10 +651,19 @@ class Hopper
 	{
 		$trace = debug_backtrace();
 
+		$traceOutput = "";
+		foreach ($trace as $index => $frame) {
+				$file = $frame['file'] ?? '[internal function]';
+				$line = $frame['line'] ?? '[no line]';
+				$class = $frame['class'] ?? '';
+				$function = $frame['function'] ?? '';
+				$traceOutput .= "#$index $class::$function() called from [$file:$line]<br>\n";
+		}
+
 		if(!empty($errorMsg))
 			$errorMsg = $errorMsg.' : ';
 		
-		$this->errorMsg .= $errorMsg.'Query '.htmlspecialchars((is_array($this->query)? implode(",", $this->query):$this->query)).' in '.(isset($trace[2]['class'])? $trace[2]['class']:'').'::'.(isset($trace[2]['function'])? $trace[2]['function']:'').' on line '.(isset($trace[1]['line'])? $trace[1]['line']:'').' in the file '.(isset($trace[1]['file'])? $trace[1]['file']:'')."<br>";
+		$this->errorMsg .= $errorMsg.'Query '.htmlspecialchars((is_array($this->query)? implode(",", $this->query):$this->query)).' in '.$traceOutput."<br>";
 
 		if (isset($this->config->debug) and $this->config->debug) {
 			trigger_error($this->errorMsg, 256);
