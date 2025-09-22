@@ -8,7 +8,7 @@ use PDO;
  *
  * @package True Framework 6
  * @author Daniel Baldwin
- * @version 1.8.2
+ * @version 1.9.0
  * @copyright 2025 Truecast Design Studio
  */
 class Hopper
@@ -828,6 +828,54 @@ class Hopper
 	public function getConfig()
 	{
 		return $this->config;
+	}
+
+	/** Begin a DB transaction */
+	public function begin(): bool
+	{
+		if (!is_object($this->obj)) throw new \Exception('Database object not created.');
+		return $this->obj->beginTransaction();
+	}
+
+	/** Commit the current transaction */
+	public function commit(): bool
+	{
+		if (!is_object($this->obj)) throw new \Exception('Database object not created.');
+		return $this->obj->commit();
+	}
+
+	/** Roll back the current transaction */
+	public function rollback(): bool
+	{
+		if (!is_object($this->obj)) throw new \Exception('Database object not created.');
+		return $this->obj->rollBack();
+	}
+
+	/** Are we currently in a transaction? */
+	public function inTransaction(): bool
+	{
+		if (!is_object($this->obj)) return false;
+		return $this->obj->inTransaction();
+	}
+
+	/**
+	 * Run a callable inside a transaction.
+	 * Commits on success; rolls back and rethrows on error.
+	 *
+	 * Usage:
+	 *   $DBPDO->transaction(function(Hopper $db) { ... $db->execute(...); ... });
+	 */
+	public function transaction(callable $fn)
+	{
+		$this->begin();
+		try {
+			$result = $fn($this);
+			$this->commit();
+			return $result;
+		} catch (\Throwable $e) {
+			if ($this->inTransaction()) $this->rollback();
+			throw $e;
+		}
 	}
 
 	/**

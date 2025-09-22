@@ -4,7 +4,7 @@
   "description": "This library provides a simple and powerful way to SET and GET records from a PDO database.",
   "keywords": ["slim","framework","php","dbpdo","layer","database","db","abstraction","layer","dbal"],
   "license": "MIT",
-  "version": "v1.8.2",
+  "version": "v1.9.0",
 
   "authors": [
   {
